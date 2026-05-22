@@ -17,9 +17,14 @@ This workflow has been smoke-tested with the OpenCode CLI.
 Verified:
 
 - OpenCode CLI can list `opencode-go/kimi-k2.6`.
-- OpenCode can run a minimal Kimi K2.6 prompt.
 - Kimi can implement a bounded file edit from a Codex-authored brief.
 - Codex can review the resulting diff afterward.
+
+Known issue:
+
+- Some OpenCode/Kimi K2.6 runs can fail with `JSON Schema not supported: could not understand the instance {'default': 'latest'}`.
+- This appears to be specific to the Kimi models behind `opencode-go`; other `opencode-go` models such as Qwen or DeepSeek may still work.
+- Treat the smoke test below as the gate. If it fails, do not use Kimi for implementation until the provider/OpenCode compatibility issue is fixed.
 
 The recommended path is OpenCode CLI delegation:
 
@@ -84,6 +89,13 @@ Expected response:
 
 ```text
 KIMI_OK
+```
+
+If the command returns a JSON Schema error, use a different OpenCode Go implementation model temporarily:
+
+```sh
+opencode run --model opencode-go/qwen3.6-plus --format json "Reply with exactly: QWEN_OK"
+opencode run --model opencode-go/deepseek-v4-flash --format json "Reply with exactly: OK"
 ```
 
 ## Operating Model
@@ -391,6 +403,22 @@ If direct Codex-side OSS delegation is not configured, use the OpenCode CLI path
 opencode run --model opencode-go/kimi-k2.6 "<handoff prompt>"
 ```
 
+### Kimi JSON Schema Error
+
+If Kimi fails with:
+
+```text
+JSON Schema not supported: could not understand the instance {'default': 'latest'}
+```
+
+Then the model is listed but not currently usable through OpenCode's agent/tool schema path.
+
+Workarounds:
+
+- Try another OpenCode Go model, such as `opencode-go/qwen3.6-plus` or `opencode-go/deepseek-v4-flash`.
+- Keep Codex as planner/reviewer and substitute the fallback model for implementation.
+- Re-run the Kimi smoke test later after OpenCode or the provider updates.
+
 ## Adoption Checklist
 
 For each project:
@@ -402,4 +430,3 @@ For each project:
 - [ ] Start with low-risk tasks.
 - [ ] Have Codex review every Kimi diff.
 - [ ] Tighten the handoff template based on failures.
-
